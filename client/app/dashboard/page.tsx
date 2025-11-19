@@ -101,13 +101,13 @@ export default function DashboardPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ready':
-        return 'text-[#3fb950]';
+        return 'text-[#3ecf8e]';
       case 'cloning':
-        return 'text-[#d29922]';
+        return 'text-[#fbbf24]';
       case 'error':
-        return 'text-[#f85149]';
+        return 'text-red-400';
       default:
-        return 'text-[#8b949e]';
+        return 'text-[#b4b4b4]';
     }
   };
 
@@ -321,41 +321,49 @@ export default function DashboardPage() {
 
         {/* Repository List */}
         {repos.length === 0 ? (
-          <div className="text-center py-12">
-            <svg
-              className="mx-auto h-12 w-12 text-[#8b949e]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-              />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-[#e6edf3]">
-              No repositories
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#3b82f6]/10 mb-6">
+              <svg
+                className="w-8 h-8 text-[#3b82f6]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              No repositories yet
             </h3>
-            <p className="mt-1 text-sm text-[#8b949e]">
-              Get started by adding a new repository.
+            <p className="text-[#b4b4b4] mb-6">
+              Get started by adding your first repository to analyze
             </p>
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="px-6 py-3 bg-[#3b82f6] text-white rounded-lg hover:bg-[#60a5fa] transition-all font-semibold shadow-lg shadow-[#3b82f6]/20"
+            >
+              + Add Your First Repository
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {repos.map((repo) => (
               <div
                 key={repo.id}
-                className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 hover:border-[#58a6ff] transition-colors"
+                className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 hover:border-[#3b82f6]/50 transition-all hover:shadow-lg hover:shadow-[#3b82f6]/5"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-semibold text-[#e6edf3]">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <h3 className="text-xl font-semibold text-white">
                         {repo.owner}/{repo.repo}
                       </h3>
-                      <span className="px-2 py-1 text-xs bg-[#0d1117] border border-[#30363d] rounded-md text-[#8b949e]">
+                      <span className="px-3 py-1 text-xs bg-[#0a0a0a] border border-[#2a2a2a] rounded-full text-[#b4b4b4] font-medium">
                         {repo.branch}
                       </span>
                     </div>
@@ -365,28 +373,28 @@ export default function DashboardPage() {
                       )}`}
                     >
                       {getStatusIcon(repo.status)}
-                      <span className="text-sm font-medium capitalize">
+                      <span className="text-sm font-semibold capitalize">
                         {repo.status}
                       </span>
                     </div>
                     {repo.error_message && (
-                      <p className="mt-2 text-sm text-[#f85149]">
+                      <p className="mt-3 text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
                         {repo.error_message}
                       </p>
                     )}
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-3">
                     {repo.status === 'ready' && (
                       <Link
                         href={`/chat/${repo.id}`}
-                        className="px-4 py-2 bg-[#58a6ff] text-white rounded-md hover:bg-[#388bfd] transition-colors font-medium text-sm"
+                        className="px-5 py-2.5 bg-[#3b82f6] text-white rounded-lg hover:bg-[#60a5fa] transition-all font-semibold text-sm shadow-lg shadow-[#3b82f6]/20 hover:shadow-[#3b82f6]/30"
                       >
-                        Chat
+                        Start Chat
                       </Link>
                     )}
                     <button
                       onClick={() => setDeleteConfirm(repo.id)}
-                      className="px-4 py-2 bg-[#f85149]/10 text-[#f85149] border border-[#f85149]/50 rounded-md hover:bg-[#f85149]/20 transition-colors font-medium text-sm"
+                      className="px-5 py-2.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors font-semibold text-sm"
                     >
                       Delete
                     </button>
@@ -399,34 +407,55 @@ export default function DashboardPage() {
 
         {/* Delete Confirmation Dialog */}
         {deleteConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-xl font-semibold text-[#e6edf3] mb-4">
-                Delete Repository
-              </h3>
-              <p className="text-[#8b949e] mb-6">
-                Are you sure you want to delete this repository? This will remove all associated data from:
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 max-w-md w-full shadow-2xl">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white">
+                  Delete Repository
+                </h3>
+              </div>
+
+              <p className="text-[#b4b4b4] mb-4">
+                Are you sure you want to delete this repository? This will permanently remove all associated data from:
               </p>
-              <ul className="text-[#8b949e] mb-6 space-y-2 list-disc list-inside">
-                <li>Vector embeddings (Qdrant)</li>
-                <li>Graph data (Neo4j)</li>
-                <li>Repository metadata (Supabase)</li>
+              <ul className="text-[#b4b4b4] mb-6 space-y-2">
+                <li className="flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span>
+                  <span>Vector embeddings (Qdrant)</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span>
+                  <span>Graph data (Neo4j)</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span>
+                  <span>Repository metadata (Supabase)</span>
+                </li>
               </ul>
-              <p className="text-[#f85149] text-sm mb-6 font-medium">
-                This action cannot be undone.
-              </p>
+
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg mb-6">
+                <p className="text-red-400 text-sm font-semibold">
+                  ⚠️ This action cannot be undone.
+                </p>
+              </div>
+
               <div className="flex space-x-3">
                 <button
                   onClick={() => handleDeleteRepo(deleteConfirm)}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2 bg-[#f85149] text-white rounded-md hover:bg-[#da3633] transition-colors font-medium disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {deleting ? 'Deleting...' : 'Delete'}
+                  {deleting ? 'Deleting...' : 'Delete Repository'}
                 </button>
                 <button
                   onClick={() => setDeleteConfirm(null)}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2 bg-[#21262d] text-[#e6edf3] rounded-md hover:bg-[#30363d] transition-colors border border-[#30363d] disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 bg-[#1a1a1a] text-white rounded-lg hover:bg-[#2a2a2a] transition-colors border border-[#2a2a2a] font-semibold disabled:opacity-50"
                 >
                   Cancel
                 </button>
