@@ -10,6 +10,11 @@ import uvicorn
 import os
 import logging
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 # Store background tasks to prevent garbage collection and retrieve exceptions
