@@ -27,11 +27,17 @@ def extract_structure(file_path: str, content: str, repo_id: str, driver: Driver
     if ext not in lang_map:
         return
 
-    parser = get_parser(lang_map[ext])
-    tree = parser.parse(content.encode())
-    language = parser.language
+    try:
+        parser = get_parser(lang_map[ext])
+        tree = parser.parse(content.encode())
+        language = parser.language
+    except Exception as e:
+        # Skip files that fail to parse
+        print(f"Warning: Failed to parse {file_path}: {e}")
+        return
 
-    queries = QUERIES.get(ext, {})
+    lang_name = lang_map[ext]
+    queries = QUERIES.get(lang_name, {})
     with driver.session() as session:
         # File node
         session.run("MERGE (f:File {path: $path, repo_id: $repo_id}) SET f.language = $lang",
