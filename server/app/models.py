@@ -1,17 +1,23 @@
-from pydantic import BaseModel # type: ignore
+# backend/app/models.py
+from pydantic import BaseModel
+from uuid import UUID
 from typing import Optional
 
-
+# This is what Next.js will send
 class AnalyzeRequest(BaseModel):
-    github_url: str
-    branch: Optional[str] = "main"
+    repo_id: UUID          # ← ONLY this is needed now
+    # github_url and branch are already stored in Supabase row
 
 class AnalyzeResponse(BaseModel):
-    repo_id: str
-    status: str = "pending"
-    message: str = "Repo queued for analysis"
+    repo_id: UUID
+    status: str = "queued"
+    message: str = "Ingestion started in background"
 
+# For chat
 class AskRequest(BaseModel):
-    repo_id: str
+    repo_id: UUID
     question: str
-    
+
+class AskResponse(BaseModel):
+    answer: str
+    sources: list[str] = []   # top file paths used
