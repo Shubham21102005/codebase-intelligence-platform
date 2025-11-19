@@ -65,3 +65,30 @@ export async function askQuestion(repo_id: string, question: string): Promise<As
 
   return response.json();
 }
+
+export type DeleteResponse = {
+  success: boolean;
+  message: string;
+  deleted_from: {
+    supabase: boolean;
+    qdrant: boolean;
+    neo4j: boolean;
+  };
+};
+
+export async function deleteRepository(repo_id: string): Promise<DeleteResponse> {
+  const response = await fetch(`${API_BASE}/delete`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ repo_id }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(error.detail || 'Failed to delete repository');
+  }
+
+  return response.json();
+}

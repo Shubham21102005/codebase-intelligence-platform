@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { analyzeRepository, Repository } from '@/lib/api';
+import { analyzeRepository, deleteRepository, Repository } from '@/lib/api';
 import Navbar from '@/components/navbar';
 
 export default function DashboardPage() {
@@ -20,6 +20,8 @@ export default function DashboardPage() {
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -106,6 +108,20 @@ export default function DashboardPage() {
         return 'text-[#f85149]';
       default:
         return 'text-[#8b949e]';
+    }
+  };
+
+  const handleDeleteRepo = async (repoId: string) => {
+    setDeleting(true);
+    try {
+      await deleteRepository(repoId);
+      setDeleteConfirm(null);
+      loadRepos(); // Reload the list after deletion
+    } catch (err: any) {
+      console.error('Error deleting repo:', err);
+      alert('Failed to delete repository: ' + err.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -323,10 +339,54 @@ export default function DashboardPage() {
                         Chat
                       </Link>
                     )}
+                    <button
+                      onClick={() => setDeleteConfirm(repo.id)}
+                      className="px-4 py-2 bg-[#f85149]/10 text-[#f85149] border border-[#f85149]/50 rounded-md hover:bg-[#f85149]/20 transition-colors font-medium text-sm"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {deleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-xl font-semibold text-[#e6edf3] mb-4">
+                Delete Repository
+              </h3>
+              <p className="text-[#8b949e] mb-6">
+                Are you sure you want to delete this repository? This will remove all associated data from:
+              </p>
+              <ul className="text-[#8b949e] mb-6 space-y-2 list-disc list-inside">
+                <li>Vector embeddings (Qdrant)</li>
+                <li>Graph data (Neo4j)</li>
+                <li>Repository metadata (Supabase)</li>
+              </ul>
+              <p className="text-[#f85149] text-sm mb-6 font-medium">
+                This action cannot be undone.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => handleDeleteRepo(deleteConfirm)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-[#f85149] text-white rounded-md hover:bg-[#da3633] transition-colors font-medium disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-[#21262d] text-[#e6edf3] rounded-md hover:bg-[#30363d] transition-colors border border-[#30363d] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>
