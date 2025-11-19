@@ -4,7 +4,10 @@ from uuid import UUID
 from app.config import supabase
 from app.services.ingestion import ingest_repo
 from app.models import AnalyzeRequest, AnalyzeResponse
+from app.routes.ask import router as ask_router
 import asyncio
+import uvicorn
+import os
 
 app = FastAPI(title="Codebase Intelligence Platform")
 
@@ -26,3 +29,8 @@ async def start_analysis(payload: AnalyzeRequest):
     asyncio.create_task(ingest_repo(repo_id))
 
     return AnalyzeResponse(repo_id=repo_id, message="Ingestion started")
+
+app.include_router(ask_router, prefix="/api")
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

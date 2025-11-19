@@ -1,64 +1,67 @@
 # backend/app/utils/tree_sitter.py
 from tree_sitter_languages import get_parser
 from neo4j import Driver
-import os
+import re
+
+QUERIES = {
+    "python": {
+        "function": "(function_definition name: (identifier) @name) @def",
+        "class": "(class_definition name: (identifier) @name) @def",
+        "call": "(call function: (identifier) @name) @call",
+        "import": "(import_statement module: (dotted_name) @name)",
+        "import_from": "(import_from_statement module: (dotted_name) @module name: (identifier) @name)"
+    },
+    "javascript": {
+        "function": "(function_declaration name: (identifier) @name) @def",
+        "class": "(class_declaration name: (identifier) @name) @def",
+        "call": "(call_expression function: (identifier) @name) @call",
+        "import": "(import_statement source: (string) @source)",
+        "export": "(export_statement declaration: (_) @decl)"
+    },
+    # Add typescript, go, java later if needed
+}
 
 def extract_structure(file_path: str, content: str, repo_id: str, driver: Driver):
-    """
-    Simple but working Tree-sitter → Neo4j extraction
-    Creates one :File node per file + basic function/class nodes
-    """
     ext = file_path.split('.')[-1].lower()
-    lang_map = {
-        "py": "python",
-        "js": "javascript",
-        "ts": "typescript",
-        "tsx": "tsx",
-        "jsx": "javascript",
-        "go": "go",
-        "java": "java",
-        "rs": "rust"
-    }
-
+    lang_map = {"py": "python", "js": "javascript", "ts": "typescript", "tsx": "tsx"}
     if ext not in lang_map:
-        return  # skip unsupported
+        return
 
-    try:
-        parser = get_parser(lang_map[ext])
-        tree = parser.parse(content.encode())
+    parser = get_parser(lang_map[ext])
+    tree = parser.parse(content.encode())
+    language = parser.language
 
-        with driver.session() as session:
-            # Create file node
-            session.run("""
-                MERGE (f:File {path: $path, repo_id: $repo_id})
-                SET f.language = $lang, f.loc = $loc
-            """, path=file_path, repo_id=repo_id, lang=ext, loc=len(content.splitlines()))
+    queries = QUERIES.get(ext, {})
+    with driver.session() as session:
+        # File node
+        session.run("MERGE (f:File {path: $path, repo_id: $repo_id}) SET f.language = $lang",
+                    path=file_path, repo_id=repo_id, lang=ext)
 
-            # Very simple: just count functions (you'll make this beautiful later)
-            query = None
-            if ext == "py":
-                query = "(function_definition name: (identifier) @func.name)"
-            elif ext in ["js", "ts", "ts", "tsx", "jsx"]:
-                query = "(function_declaration name: (identifier) @func.name)"
+        for kind, query_str in queries.items():
+            if not query_str:
+                continue
+            query = language.query(query_str)
+            captures = query.captures(tree.root_node)
 
-            if query:
-                language = parser.language
-                q = language.query(query)
-                captures = q.captures(tree.root_node)
-                func_names = [node.text.decode() for _, node in captures if _ == "func.name"]
-
-                for name in func_names:
-                    session.run("""
-                        MATCH (f:File {path: $path, repo_id: $repo_id})
-                        MERGE (func:Function {name: $name, file_path: $path})
-                        MERGE (f)-[:CONTAINS]->(func)
-                    """, path=file_path, repo_id=repo_id, name=name)
-
-    except Exception as e:
-        print(f"Tree-sitter failed on {file_path}: {e}")
-        # Still create file node even if parsing fails
-        with driver.session() as session:
-            session.run("""
-                MERGE (f:File {path: $path, repo_id: $repo_id})
-                SET f.language = $lang, f.parse_error = true
-            """, path=file_path, repo_id=repo_id, lang=ext)
+            for node, tag in captures:
+                text = node.text.decode()
+                if tag == "name" or tag == "source" or tag == "module":
+                    name = text
+                    if kind == "function":
+                        session.run("""
+                            MATCH (f:File {path: $path, repo_id: $repo_id})
+                            MERGE (func:Function {name: $name, file_path: $path})
+                            MERGE (f)-[:CONTAINS]->(func)
+                        """, path=file_path, repo_id=repo_id, name=name)
+                    elif kind == "class":
+                        session.run("""
+                            MATCH (f:File {path: $path, repo_id: $repo_id})
+                            MERGE (cls:Class {name: $name, file_path: $path})
+                            MERGE (f)-[:CONTAINS]->(cls)
+                        """, path=file_path, repo_id=repo_id, name=name)
+                    elif kind == "call":
+                        session.run("""
+                            MATCH (f:File {path: $path, repo_id: $repo_id})
+                            MERGE (called:Function {name: $name})
+                            MERGE (f)-[:CALLS]->(called)
+                        """, path=file_path, repo_id=repo_id, name=name)

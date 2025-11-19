@@ -11,3 +11,7 @@ class AnalyzeResponse(BaseModel):
     status: str = "pending"
     message: str = "Repo queued for analysis"
 
+class AskRequest(BaseModel):
+    repo_id: str
+    question: str
+    
