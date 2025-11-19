@@ -23,6 +23,11 @@ export type AskResponse = {
   sources: string[];
 };
 
+export type StreamEvent = {
+  type: 'sources' | 'content' | 'done' | 'error';
+  data?: any;
+};
+
 export type AnalyzeRequest = {
   repo_id: string;
 };
@@ -64,6 +69,59 @@ export async function askQuestion(repo_id: string, question: string): Promise<As
   }
 
   return response.json();
+}
+
+export async function* askQuestionStream(
+  repo_id: string,
+  question: string
+): AsyncGenerator<StreamEvent> {
+  const response = await fetch(`${API_BASE}/ask`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ repo_id, question }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(error.detail || 'Failed to ask question');
+  }
+
+  if (!response.body) {
+    throw new Error('Response body is null');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+
+      // Keep the last incomplete line in the buffer
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.trim()) {
+          try {
+            const event: StreamEvent = JSON.parse(line);
+            yield event;
+          } catch (e) {
+            console.error('Failed to parse stream event:', line, e);
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 export type DeleteResponse = {

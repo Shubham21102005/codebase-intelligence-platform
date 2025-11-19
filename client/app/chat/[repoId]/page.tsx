@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
-import { askQuestion, AskResponse, Repository } from "@/lib/api";
+import { askQuestionStream, Repository } from "@/lib/api";
 import Navbar from "@/components/navbar";
 import CodeViewer from "@/components/code-viewer";
 
@@ -88,25 +88,54 @@ export default function ChatPage() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const questionText = input;
     setInput("");
     setLoading(true);
     setError("");
 
-    try {
-      const response = await askQuestion(repo.id, input);
+    const assistantMessageId = (Date.now() + 1).toString();
+    let assistantContent = "";
+    let sources: string[] = [];
 
+    try {
+      // Create a placeholder message for streaming
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: assistantMessageId,
         role: "assistant",
-        content: response.answer,
-        sources: response.sources,
+        content: "",
+        sources: [],
         timestamp: new Date(),
       };
-
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Stream the response
+      for await (const event of askQuestionStream(repo.id, questionText)) {
+        if (event.type === "sources") {
+          sources = event.data || [];
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMessageId ? { ...m, sources } : m
+            )
+          );
+        } else if (event.type === "content") {
+          assistantContent += event.data || "";
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMessageId
+                ? { ...m, content: assistantContent }
+                : m
+            )
+          );
+        } else if (event.type === "error") {
+          throw new Error(event.data || "Stream error");
+        } else if (event.type === "done") {
+          // Stream completed
+          break;
+        }
+      }
     } catch (err: any) {
       setError(err.message || "Failed to get response");
-      setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
+      setMessages((prev) => prev.filter((m) => m.id !== userMessage.id && m.id !== assistantMessageId));
     } finally {
       setLoading(false);
     }
