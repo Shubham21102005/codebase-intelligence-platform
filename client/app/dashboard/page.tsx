@@ -184,44 +184,86 @@ export default function DashboardPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
-        <div className="text-[#8b949e]">Loading...</div>
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6]"></div>
+          <div className="text-[#b4b4b4]">Loading...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0d1117]">
+    <div className="min-h-screen bg-[#0a0a0a]">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-[#e6edf3]">
-            Your Repositories
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Your Repositories
+            </h1>
+            <p className="text-[#b4b4b4]">
+              Manage and chat with your indexed codebases
+            </p>
+          </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className="px-4 py-2 bg-[#58a6ff] text-white rounded-md hover:bg-[#388bfd] transition-colors font-medium"
+            className="px-6 py-3 bg-[#3b82f6] text-white rounded-lg hover:bg-[#60a5fa] transition-all font-semibold shadow-lg shadow-[#3b82f6]/20 hover:shadow-[#3b82f6]/30"
           >
             + Add Repository
           </button>
         </div>
 
-        {/* Add Repository Form */}
+        {/* Add Repository Modal */}
         {showAddForm && (
-          <div className="mb-8 bg-[#161b22] border border-[#30363d] rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-[#e6edf3] mb-4">
-              Add New Repository
-            </h2>
-            {error && (
-              <div className="mb-4 p-3 bg-[#f85149]/10 border border-[#f85149]/50 rounded-md text-[#f85149] text-sm">
-                {error}
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 max-w-2xl w-full shadow-2xl">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    Add New Repository
+                  </h2>
+                  <p className="text-[#b4b4b4] text-sm">
+                    Connect a GitHub repository to start chatting with your code
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="text-[#b4b4b4] hover:text-white transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-            )}
-            <form onSubmit={handleAddRepo} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-[#e6edf3] mb-2">
+
+              {/* Info Box */}
+              <div className="mb-6 p-4 bg-[#3b82f6]/10 border border-[#3b82f6]/30 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-5 h-5 text-[#3b82f6] mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-semibold text-[#3b82f6] mb-2">Important Information</h3>
+                    <ul className="text-sm text-[#b4b4b4] space-y-1">
+                      <li>⏱️ Analysis typically takes <span className="text-white font-medium">1-2 minutes</span></li>
+                      <li>📊 Please limit repositories to <span className="text-white font-medium">under 100,000 lines of code</span></li>
+                      <li>🔒 Your code is analyzed securely and kept private</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleAddRepo} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
                     GitHub Repository URL
                   </label>
                   <input
@@ -232,14 +274,15 @@ export default function DashboardPage() {
                     }
                     placeholder="https://github.com/facebook/react"
                     required
-                    className="w-full px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-md text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-[#58a6ff] focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-white placeholder-[#6b6b6b] focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent transition-all"
                   />
-                  <p className="mt-1 text-xs text-[#8b949e]">
+                  <p className="mt-2 text-xs text-[#6b6b6b]">
                     Enter the full GitHub URL (e.g., https://github.com/owner/repository)
                   </p>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-[#e6edf3] mb-2">
+                  <label className="block text-sm font-semibold text-white mb-2">
                     Branch
                   </label>
                   <input
@@ -250,27 +293,29 @@ export default function DashboardPage() {
                     }
                     placeholder="main"
                     required
-                    className="w-full px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-md text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-[#58a6ff] focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-white placeholder-[#6b6b6b] focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent transition-all"
                   />
                 </div>
-              </div>
-              <div className="flex space-x-3">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 bg-[#58a6ff] text-white rounded-md hover:bg-[#388bfd] transition-colors font-medium disabled:opacity-50"
-                >
-                  {submitting ? 'Adding...' : 'Add Repository'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 bg-[#21262d] text-[#e6edf3] rounded-md hover:bg-[#30363d] transition-colors border border-[#30363d]"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 px-6 py-3 bg-[#3b82f6] text-white rounded-lg hover:bg-[#60a5fa] transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#3b82f6]/20"
+                  >
+                    {submitting ? 'Analyzing Repository...' : 'Add & Analyze'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    disabled={submitting}
+                    className="px-6 py-3 bg-[#1a1a1a] text-white rounded-lg hover:bg-[#2a2a2a] transition-colors border border-[#2a2a2a] font-semibold disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 

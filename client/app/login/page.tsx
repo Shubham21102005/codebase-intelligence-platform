@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -34,37 +35,44 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-4 relative">
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#3b82f6]/5 via-transparent to-transparent pointer-events-none"></div>
+
+      <div className="w-full max-w-md relative">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-[#58a6ff] rounded-lg flex items-center justify-center">
-              <span className="text-[#0d1117] font-bold text-xl">C</span>
-            </div>
-            <span className="text-2xl font-semibold text-[#e6edf3]">
-              Codebase Analyzer
+          <div className="flex items-center space-x-3">
+            <Image
+              src="/brain-brainstorm-creative-svgrepo-com.svg"
+              alt="CodePulse Logo"
+              width={40}
+              height={40}
+              className="w-10 h-10"
+            />
+            <span className="text-2xl font-semibold text-white">
+              CodePulse
             </span>
           </div>
         </div>
 
         {/* Login Form */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-8">
-          <h1 className="text-2xl font-bold text-[#e6edf3] mb-6 text-center">
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-8 shadow-xl">
+          <h1 className="text-2xl font-bold text-white mb-6 text-center">
             Sign in to your account
           </h1>
 
           {error && (
-            <div className="mb-4 p-3 bg-[#f85149]/10 border border-[#f85149]/50 rounded-md text-[#f85149] text-sm">
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-md text-red-400 text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-[#e6edf3] mb-2"
+                className="block text-sm font-medium text-white mb-2"
               >
                 Email address
               </label>
@@ -74,7 +82,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-md text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-[#58a6ff] focus:border-transparent"
+                className="w-full px-3 py-2 bg-[#0a0a0a] border border-[#2a2a2a] rounded-md text-white placeholder-[#6b6b6b] focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent transition-all"
                 placeholder="you@example.com"
               />
             </div>
@@ -82,7 +90,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-[#e6edf3] mb-2"
+                className="block text-sm font-medium text-white mb-2"
               >
                 Password
               </label>
@@ -92,7 +100,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-md text-[#e6edf3] placeholder-[#8b949e] focus:outline-none focus:ring-2 focus:ring-[#58a6ff] focus:border-transparent"
+                className="w-full px-3 py-2 bg-[#0a0a0a] border border-[#2a2a2a] rounded-md text-white placeholder-[#6b6b6b] focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent transition-all"
                 placeholder="••••••••"
               />
             </div>
@@ -100,18 +108,18 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-4 py-2 bg-[#58a6ff] text-white rounded-md hover:bg-[#388bfd] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2.5 bg-[#3b82f6] text-white rounded-md hover:bg-[#60a5fa] transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#3b82f6]/20 hover:shadow-[#3b82f6]/30"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-[#8b949e]">
+            <p className="text-sm text-[#b4b4b4]">
               Don't have an account?{' '}
               <Link
                 href="/register"
-                className="text-[#58a6ff] hover:underline"
+                className="text-[#3b82f6] hover:text-[#60a5fa] transition-colors font-medium"
               >
                 Sign up
               </Link>
@@ -122,7 +130,7 @@ export default function LoginPage() {
         <div className="mt-6 text-center">
           <Link
             href="/"
-            className="text-sm text-[#8b949e] hover:text-[#58a6ff] transition-colors"
+            className="text-sm text-[#b4b4b4] hover:text-white transition-colors"
           >
             ← Back to home
           </Link>
