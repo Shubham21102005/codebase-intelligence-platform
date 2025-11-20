@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/lib/auth-context';
-import { supabase } from '@/lib/supabase';
-import { analyzeRepository, deleteRepository, Repository } from '@/lib/api';
-import Navbar from '@/components/navbar';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/lib/supabase";
+import { analyzeRepository, deleteRepository, Repository } from "@/lib/api";
+import Navbar from "@/components/navbar";
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -15,17 +15,17 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newRepo, setNewRepo] = useState({
-    githubUrl: '',
-    branch: 'main',
+    githubUrl: "",
+    branch: "main",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [user, authLoading, router]);
 
@@ -38,15 +38,15 @@ export default function DashboardPage() {
   const loadRepos = async () => {
     try {
       const { data, error } = await supabase
-        .from('repos')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+        .from("repos")
+        .select("*")
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setRepos(data || []);
     } catch (err: any) {
-      console.error('Error loading repos:', err);
+      console.error("Error loading repos:", err);
     } finally {
       setLoading(false);
     }
@@ -54,45 +54,44 @@ export default function DashboardPage() {
 
   const handleAddRepo = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setSubmitting(true);
 
     try {
-      // Extract owner and repo from GitHub URL
       const urlPattern = /github\.com\/([^\/]+)\/([^\/]+)/;
       const match = newRepo.githubUrl.match(urlPattern);
 
       if (!match) {
-        throw new Error('Invalid GitHub URL. Format: https://github.com/owner/repo');
+        throw new Error(
+          "Invalid GitHub URL. Format: https://github.com/owner/repo"
+        );
       }
 
       const owner = match[1];
-      const repo = match[2].replace(/\.git$/, ''); // Remove .git suffix if present
+      const repo = match[2].replace(/\.git$/, "");
 
-      // Insert repo into database
       const { data, error } = await supabase
-        .from('repos')
+        .from("repos")
         .insert({
           user_id: user?.id,
           owner: owner,
           repo: repo,
           branch: newRepo.branch,
           github_url: newRepo.githubUrl,
-          status: 'pending',
+          status: "pending",
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Trigger analysis
       await analyzeRepository(data.id);
 
       setShowAddForm(false);
-      setNewRepo({ githubUrl: '', branch: 'main' });
+      setNewRepo({ githubUrl: "", branch: "main" });
       loadRepos();
     } catch (err: any) {
-      setError(err.message || 'Failed to add repository');
+      setError(err.message || "Failed to add repository");
     } finally {
       setSubmitting(false);
     }
@@ -100,14 +99,27 @@ export default function DashboardPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ready':
-        return 'text-[#3ecf8e]';
-      case 'cloning':
-        return 'text-[#fbbf24]';
-      case 'error':
-        return 'text-red-400';
+      case "ready":
+        return "text-green-400";
+      case "cloning":
+        return "text-yellow-400";
+      case "error":
+        return "text-red-400";
       default:
-        return 'text-[#b4b4b4]';
+        return "text-[#8b8b8b]";
+    }
+  };
+
+  const getStatusBgColor = (status: string) => {
+    switch (status) {
+      case "ready":
+        return "bg-green-500/10 border-green-500/30";
+      case "cloning":
+        return "bg-yellow-500/10 border-yellow-500/30";
+      case "error":
+        return "bg-red-500/10 border-red-500/30";
+      default:
+        return "bg-[#1a1a1a] border-[#2a2a2a]";
     }
   };
 
@@ -116,10 +128,10 @@ export default function DashboardPage() {
     try {
       await deleteRepository(repoId);
       setDeleteConfirm(null);
-      loadRepos(); // Reload the list after deletion
+      loadRepos();
     } catch (err: any) {
-      console.error('Error deleting repo:', err);
-      alert('Failed to delete repository: ' + err.message);
+      console.error("Error deleting repo:", err);
+      alert("Failed to delete repository: " + err.message);
     } finally {
       setDeleting(false);
     }
@@ -127,58 +139,16 @@ export default function DashboardPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'ready':
+      case "ready":
+        return <div className="w-3 h-3 bg-green-400 rounded-full"></div>;
+      case "cloning":
         return (
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
         );
-      case 'cloning':
-        return (
-          <svg
-            className="w-5 h-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        );
-      case 'error':
-        return (
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clipRule="evenodd"
-            />
-          </svg>
-        );
+      case "error":
+        return <div className="w-3 h-3 bg-red-400 rounded-full"></div>;
       default:
-        return (
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-              clipRule="evenodd"
-            />
-          </svg>
-        );
+        return <div className="w-3 h-3 bg-[#8b8b8b] rounded-full"></div>;
     }
   };
 
@@ -186,8 +156,8 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6]"></div>
-          <div className="text-[#b4b4b4]">Loading...</div>
+          <div className="w-12 h-12 border-4 border-[#3b82f6] border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-[#8b8b8b]">Loading...</div>
         </div>
       </div>
     );
@@ -197,73 +167,122 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#0a0a0a]">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-2xl font-semibold text-white mb-2">
               Your Repositories
             </h1>
-            <p className="text-[#b4b4b4]">
+            <p className="text-[#8b8b8b]">
               Manage and chat with your indexed codebases
             </p>
           </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className="px-6 py-3 bg-[#3b82f6] text-white rounded-lg hover:bg-[#60a5fa] transition-all font-semibold shadow-lg shadow-[#3b82f6]/20 hover:shadow-[#3b82f6]/30"
+            className="px-6 py-3 bg-[#3b82f6] text-white rounded-xl hover:bg-[#60a5fa] transition-all font-medium flex items-center space-x-2"
           >
-            + Add Repository
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            <span>Add Repository</span>
           </button>
         </div>
 
         {/* Add Repository Modal */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 max-w-2xl w-full shadow-2xl">
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 max-w-2xl w-full">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-2">
+                  <h2 className="text-xl font-semibold text-white mb-2">
                     Add New Repository
                   </h2>
-                  <p className="text-[#b4b4b4] text-sm">
+                  <p className="text-[#8b8b8b] text-sm">
                     Connect a GitHub repository to start chatting with your code
                   </p>
                 </div>
                 <button
                   onClick={() => setShowAddForm(false)}
-                  className="text-[#b4b4b4] hover:text-white transition-colors"
+                  className="p-2 hover:bg-[#2a2a2a] rounded-lg transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-5 h-5 text-[#8b8b8b]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
 
               {/* Info Box */}
-              <div className="mb-6 p-4 bg-[#3b82f6]/10 border border-[#3b82f6]/30 rounded-lg">
+              <div className="mb-6 p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl">
                 <div className="flex items-start space-x-3">
-                  <svg className="w-5 h-5 text-[#3b82f6] mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  <svg
+                    className="w-5 h-5 text-[#3b82f6] mt-0.5 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-[#3b82f6] mb-2">Important Information</h3>
-                    <ul className="text-sm text-[#b4b4b4] space-y-1">
-                      <li>⏱️ Analysis typically takes <span className="text-white font-medium">1-2 minutes</span></li>
-                      <li>📊 Please limit repositories to <span className="text-white font-medium">under 100,000 lines of code</span></li>
-                      <li>🔒 Your code is analyzed securely and kept private</li>
+                    <h3 className="text-sm font-medium text-white mb-2">
+                      Important Information
+                    </h3>
+                    <ul className="text-sm text-[#8b8b8b] space-y-1">
+                      <li>• Analysis typically takes 1-2 minutes</li>
+                      <li>• The repository should be public</li>
+                      <li>
+                        • Please limit repositories to under 100,000 lines of
+                        code
+                      </li>
+                      <li>• Your code is analyzed securely and kept private</li>
                     </ul>
                   </div>
                 </div>
               </div>
 
               {error && (
-                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
-                  {error}
+                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-start space-x-3">
+                  <svg
+                    className="w-5 h-5 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>{error}</span>
                 </div>
               )}
 
               <form onSubmit={handleAddRepo} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
+                  <label className="block text-sm font-medium text-white mb-3">
                     GitHub Repository URL
                   </label>
                   <input
@@ -274,15 +293,16 @@ export default function DashboardPage() {
                     }
                     placeholder="https://github.com/facebook/react"
                     required
-                    className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-white placeholder-[#6b6b6b] focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl text-white placeholder-[#6b6b6b] focus:outline-none focus:border-[#3b82f6] transition-all"
                   />
                   <p className="mt-2 text-xs text-[#6b6b6b]">
-                    Enter the full GitHub URL (e.g., https://github.com/owner/repository)
+                    Enter the full GitHub URL (e.g.,
+                    https://github.com/owner/repository)
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
+                  <label className="block text-sm font-medium text-white mb-3">
                     Branch
                   </label>
                   <input
@@ -293,7 +313,7 @@ export default function DashboardPage() {
                     }
                     placeholder="main"
                     required
-                    className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-white placeholder-[#6b6b6b] focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl text-white placeholder-[#6b6b6b] focus:outline-none focus:border-[#3b82f6] transition-all"
                   />
                 </div>
 
@@ -301,15 +321,37 @@ export default function DashboardPage() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 px-6 py-3 bg-[#3b82f6] text-white rounded-lg hover:bg-[#60a5fa] transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#3b82f6]/20"
+                    className="flex-1 px-6 py-3 bg-[#3b82f6] text-white rounded-xl hover:bg-[#60a5fa] transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                   >
-                    {submitting ? 'Analyzing Repository...' : 'Add & Analyze'}
+                    {submitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Analyzing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Add & Analyze</span>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </>
+                    )}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowAddForm(false)}
                     disabled={submitting}
-                    className="px-6 py-3 bg-[#1a1a1a] text-white rounded-lg hover:bg-[#2a2a2a] transition-colors border border-[#2a2a2a] font-semibold disabled:opacity-50"
+                    className="px-6 py-3 bg-[#1a1a1a] text-white rounded-xl hover:bg-[#2a2a2a] transition-colors border border-[#2a2a2a] font-medium disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -322,7 +364,7 @@ export default function DashboardPage() {
         {/* Repository List */}
         {repos.length === 0 ? (
           <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#3b82f6]/10 mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-[#1a1a1a] border border-[#2a2a2a] mb-6">
               <svg
                 className="w-8 h-8 text-[#3b82f6]"
                 fill="none"
@@ -337,17 +379,31 @@ export default function DashboardPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">
+            <h3 className="text-xl font-semibold text-white mb-3">
               No repositories yet
             </h3>
-            <p className="text-[#b4b4b4] mb-6">
-              Get started by adding your first repository to analyze
+            <p className="text-[#8b8b8b] mb-8 max-w-md mx-auto leading-relaxed">
+              Get started by adding your first repository to analyze and chat
+              with your codebase
             </p>
             <button
               onClick={() => setShowAddForm(true)}
-              className="px-6 py-3 bg-[#3b82f6] text-white rounded-lg hover:bg-[#60a5fa] transition-all font-semibold shadow-lg shadow-[#3b82f6]/20"
+              className="px-8 py-3 bg-[#3b82f6] text-white rounded-xl hover:bg-[#60a5fa] transition-all font-medium flex items-center space-x-2 mx-auto"
             >
-              + Add Your First Repository
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <span>Add Your First Repository</span>
             </button>
           </div>
         ) : (
@@ -355,48 +411,97 @@ export default function DashboardPage() {
             {repos.map((repo) => (
               <div
                 key={repo.id}
-                className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 hover:border-[#3b82f6]/50 transition-all hover:shadow-lg hover:shadow-[#3b82f6]/5"
+                className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 hover:border-[#3b82f6]/30 transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <h3 className="text-xl font-semibold text-white">
-                        {repo.owner}/{repo.repo}
-                      </h3>
-                      <span className="px-3 py-1 text-xs bg-[#0a0a0a] border border-[#2a2a2a] rounded-full text-[#b4b4b4] font-medium">
-                        {repo.branch}
-                      </span>
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-10 h-10 bg-[#0a0a0a] rounded-lg flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 text-[#8b8b8b]"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">
+                          {repo.owner}/{repo.repo}
+                        </h3>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className="px-2 py-1 text-xs bg-[#0a0a0a] border border-[#2a2a2a] rounded-md text-[#8b8b8b] font-medium">
+                            {repo.branch}
+                          </span>
+                          <div
+                            className={`flex items-center space-x-2 px-3 py-1 rounded-lg text-sm font-medium ${getStatusBgColor(
+                              repo.status
+                            )} ${getStatusColor(repo.status)}`}
+                          >
+                            {getStatusIcon(repo.status)}
+                            <span className="capitalize">{repo.status}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div
-                      className={`flex items-center space-x-2 ${getStatusColor(
-                        repo.status
-                      )}`}
-                    >
-                      {getStatusIcon(repo.status)}
-                      <span className="text-sm font-semibold capitalize">
-                        {repo.status}
-                      </span>
-                    </div>
+
                     {repo.error_message && (
-                      <p className="mt-3 text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                        {repo.error_message}
-                      </p>
+                      <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-start space-x-3">
+                        <svg
+                          className="w-4 h-4 flex-shrink-0 mt-0.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>{repo.error_message}</span>
+                      </div>
                     )}
                   </div>
                   <div className="flex space-x-3">
-                    {repo.status === 'ready' && (
+                    {repo.status === "ready" && (
                       <Link
                         href={`/chat/${repo.id}`}
-                        className="px-5 py-2.5 bg-[#3b82f6] text-white rounded-lg hover:bg-[#60a5fa] transition-all font-semibold text-sm shadow-lg shadow-[#3b82f6]/20 hover:shadow-[#3b82f6]/30"
+                        className="px-5 py-2.5 bg-[#3b82f6] text-white rounded-lg hover:bg-[#60a5fa] transition-all font-medium text-sm flex items-center space-x-2"
                       >
-                        Start Chat
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                          />
+                        </svg>
+                        <span>Chat</span>
                       </Link>
                     )}
                     <button
                       onClick={() => setDeleteConfirm(repo.id)}
-                      className="px-5 py-2.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors font-semibold text-sm"
+                      className="px-5 py-2.5 bg-[#1a1a1a] text-[#8b8b8b] border border-[#2a2a2a] rounded-lg hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-all font-medium text-sm flex items-center space-x-2"
                     >
-                      Delete
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      <span>Delete</span>
                     </button>
                   </div>
                 </div>
@@ -408,54 +513,87 @@ export default function DashboardPage() {
         {/* Delete Confirmation Dialog */}
         {deleteConfirm && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 max-w-md w-full shadow-2xl">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 max-w-md w-full">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-red-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white">
-                  Delete Repository
-                </h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">
+                    Delete Repository
+                  </h3>
+                  <p className="text-[#8b8b8b] text-sm mt-1">
+                    This action cannot be undone
+                  </p>
+                </div>
               </div>
 
-              <p className="text-[#b4b4b4] mb-4">
-                Are you sure you want to delete this repository? This will permanently remove all associated data from:
+              <p className="text-[#8b8b8b] mb-6 leading-relaxed">
+                Are you sure you want to delete this repository? This will
+                permanently remove all associated data including:
               </p>
-              <ul className="text-[#b4b4b4] mb-6 space-y-2">
-                <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span>
-                  <span>Vector embeddings (Qdrant)</span>
+
+              <ul className="text-[#8b8b8b] mb-6 space-y-2">
+                <li className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-[#3b82f6] rounded-full"></div>
+                  <span>Vector embeddings</span>
                 </li>
-                <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span>
-                  <span>Graph data (Neo4j)</span>
+                <li className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-[#3b82f6] rounded-full"></div>
+                  <span>Graph data</span>
                 </li>
-                <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span>
-                  <span>Repository metadata (Supabase)</span>
+                <li className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-[#3b82f6] rounded-full"></div>
+                  <span>Repository metadata</span>
                 </li>
               </ul>
-
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg mb-6">
-                <p className="text-red-400 text-sm font-semibold">
-                  ⚠️ This action cannot be undone.
-                </p>
-              </div>
 
               <div className="flex space-x-3">
                 <button
                   onClick={() => handleDeleteRepo(deleteConfirm)}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
-                  {deleting ? 'Deleting...' : 'Delete Repository'}
+                  {deleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      <span>Delete Repository</span>
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => setDeleteConfirm(null)}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2.5 bg-[#1a1a1a] text-white rounded-lg hover:bg-[#2a2a2a] transition-colors border border-[#2a2a2a] font-semibold disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-[#1a1a1a] text-white rounded-lg hover:bg-[#2a2a2a] transition-colors border border-[#2a2a2a] font-medium disabled:opacity-50"
                 >
                   Cancel
                 </button>
