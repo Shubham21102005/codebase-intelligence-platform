@@ -26,6 +26,17 @@ export default function LoginPage() {
 
       if (error) throw error;
 
+      // Call backend health endpoint after successful login
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        const healthResponse = await fetch(`${apiUrl}/health`);
+        const healthData = await healthResponse.json();
+        console.log('Backend health check:', healthData);
+      } catch (healthError) {
+        console.error('Failed to check backend health:', healthError);
+        // Don't block login if health check fails
+      }
+
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Failed to sign in');

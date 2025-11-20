@@ -18,7 +18,7 @@ app = FastAPI(title="Codebase Intelligence Platform")
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-@app.get("/health")
+@app.get("/api/health")
 async def health():
     return {"status": "healthy", "mode": "modular"}
 
