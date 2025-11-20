@@ -48,12 +48,46 @@ async def ingest_repo(repo_id: UUID):
             vectors_config={"size": 1536, "distance": "Cosine"}
         )
 
+        # Directories to skip during analysis
+        EXCLUDED_DIRS = {
+            "node_modules",
+            "venv",
+            ".venv",
+            "env",
+            ".env",
+            "__pycache__",
+            ".git",
+            ".svn",
+            ".hg",
+            "dist",
+            "build",
+            ".next",
+            ".nuxt",
+            "target",
+            "vendor",
+            ".gradle",
+            ".idea",
+            ".vscode",
+            "coverage",
+            ".pytest_cache",
+            ".mypy_cache",
+            ".tox",
+            "site-packages",
+            "bower_components",
+            "jspm_packages",
+        }
+
         with tempfile.TemporaryDirectory() as tmpdir:
             clone_url = f"https://{github_token}@github.com/{repo['owner']}/{repo['repo']}.git"
             git.Repo.clone_from(clone_url, tmpdir, depth=1, branch=repo.get("branch", "main"))
 
             files = []
             for root, _, fs in os.walk(tmpdir):
+                # Skip excluded directories
+                dir_parts = os.path.normpath(root).split(os.sep)
+                if any(excluded in dir_parts for excluded in EXCLUDED_DIRS):
+                    continue
+
                 for f in fs:
                     if f.split(".")[-1] in ["py", "js", "ts", "tsx", "jsx", "go", "java", "rs"]:
                         files.append(os.path.join(root, f))
