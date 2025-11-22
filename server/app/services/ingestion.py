@@ -1,8 +1,8 @@
 from app.config import supabase, vo, qdrant, neo4j_driver, github_token
 from uuid import UUID
-import tempfile
-import git
-from tqdm.asyncio import tqdm_asyncio
+import tempfile #create temporary directories and then auto-delete it
+import git 
+from tqdm.asyncio import tqdm_asyncio #shows progress bar in terminal, can be removed while deploying
 from app.utils.tree_sitter import extract_structure
 from qdrant_client.http.models import PointStruct
 import asyncio
@@ -14,7 +14,7 @@ from voyageai.error import RateLimitError
 logger = logging.getLogger(__name__)
 
 
-def embed_with_retry(texts, model="voyage-code-2", max_retries=5):
+def embed_with_retry(texts, model="voyage-code-2", max_retries=5): 
     """
     Embed texts with exponential backoff retry logic for rate limits.
     """
@@ -39,11 +39,11 @@ def embed_with_retry(texts, model="voyage-code-2", max_retries=5):
 
 async def ingest_repo(repo_id: UUID):
     try:
-        repo = supabase.table("repos").select("*").eq("id", str(repo_id)).single().execute().data
+        repo = supabase.table("repos").select("*").eq("id", str(repo_id)).single().execute().data #fetches repo info from supabase
 
         collection_name = f"repo_{repo_id}"
 
-        qdrant.recreate_collection(
+        qdrant.recreate_collection( # creates new collection in qdrant if already exists, recreates it(deletes old one)
             collection_name=collection_name,
             vectors_config={"size": 1536, "distance": "Cosine"}
         )
@@ -77,14 +77,14 @@ async def ingest_repo(repo_id: UUID):
             "jspm_packages",
         }
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory() as tmpdir: #creates temporary directory
             clone_url = f"https://{github_token}@github.com/{repo['owner']}/{repo['repo']}.git"
-            git.Repo.clone_from(clone_url, tmpdir, depth=1, branch=repo.get("branch", "main"))
+            git.Repo.clone_from(clone_url, tmpdir, depth=1, branch=repo.get("branch", "main")) #depth= 1: clones only latest commit
 
             files = []
             for root, _, fs in os.walk(tmpdir):
                 # Skip excluded directories
-                dir_parts = os.path.normpath(root).split(os.sep)
+                dir_parts = os.path.normpath(root).split(os.sep) #turns folder name to list of strings
                 if any(excluded in dir_parts for excluded in EXCLUDED_DIRS):
                     continue
 
@@ -105,16 +105,11 @@ async def ingest_repo(repo_id: UUID):
                     continue
 
                 # Combine chunks and full file content into a single batch for embedding
-                # This reduces API calls from 2 per file to 1 per file
                 all_texts = chunks + [content[:800]]
-
-                # Embed all at once with retry logic
                 all_embeds = embed_with_retry(all_texts)
 
-                # Split embeddings back into chunks and full file
                 chunk_embeds = all_embeds[:len(chunks)]
                 full_emb = all_embeds[-1]
-
                 # Build points
                 points = []
                 for i, (chunk, emb) in enumerate(zip(chunks, chunk_embeds)):
@@ -149,7 +144,6 @@ async def ingest_repo(repo_id: UUID):
                     )
                 )
 
-                # Now upsert — this will NEVER be empty
                 qdrant.upsert(collection_name=collection_name, points=points)
 
                 # Graph (Tree-sitter → Neo4j)

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware 
 from app.routes.ask import router as ask_router
 from app.routes.delete import router as delete_router
 from app.routes.analyze import router as analyze_router

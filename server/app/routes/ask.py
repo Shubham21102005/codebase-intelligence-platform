@@ -60,6 +60,9 @@ async def ask_codebase(payload: AskRequest):
 # Relationships
 {graph_context}
 
+# Relevant Code Snippets
+Include the most relevant code snippets from the context above that help answer the question. Reference them using `file.ext:line` format.
+
 # Question
 {payload.question}
 
@@ -67,7 +70,8 @@ async def ask_codebase(payload: AskRequest):
 - Answer directly - get to the point quickly
 - Only mention relevant files and code
 - Use `file.ext:line` format for references
-- Include code snippets only when necessary
+- Include code snippets too
+- Show the most relevant code snippets that support your answer
 - Skip general explanations unless asked
 - Be concise and actionable
 

@@ -5,7 +5,7 @@ from typing import Optional
 
 # This is what Next.js will send
 class AnalyzeRequest(BaseModel):
-    repo_id: UUID          # ← ONLY this is needed now
+    repo_id: UUID          
     # github_url and branch are already stored in Supabase row
 
 class AnalyzeResponse(BaseModel):
